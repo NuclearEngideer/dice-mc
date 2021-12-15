@@ -3,7 +3,7 @@ program roll
   implicit none
   
   integer(4), allocatable   :: N, M
-  integer(4)                :: i, ilast, j, start, end_index, ii
+  integer(4)                :: i, j, end_index, ii
   integer(4)                :: num_elements, global_total, inner_total
   character(256)            :: inString
   character(:), allocatable :: splitstring(:)
@@ -18,6 +18,7 @@ program roll
   write(*,*) 'Enter in the form of "1d20 + 1d6 - 1d8 x4"'
   write(*,*) 'to roll those dice 4 times'
   write(*,*)
+  write(*,*) 'Help with "h"'
   write(*,*) 'Quit with "q"'
   
   100 continue
@@ -69,7 +70,6 @@ program roll
 
   if ( inString(1:1) .ne. '-' .and. &
      & inString(1:1) .ne. '+') then
-!     num_elements = num_elements + 1
      default_plus = .true.
   end if
  
@@ -102,17 +102,13 @@ program roll
   do i=1,j
     inner_total=0
      do ii=1,end_index
-      
       ! if the index is an operator, take note of the operator
       ! then read the next index and cycle 
       if ( ii==1 .and. default_plus ) then
-        ! add to total (default plus)
         inner_total=inner_total+parse_next(splitstring(ii))
       else if ( splitstring(ii) .eq. '+' ) then
-        ! add splitstring(ii+1) to total
         inner_total=inner_total+parse_next(splitstring(ii+1))
       else if ( splitstring(ii) .eq. '-' ) then
-        ! add splitstring(ii+1) to total
         inner_total=inner_total-parse_next(splitstring(ii+1))
       endif
     enddo
@@ -138,11 +134,6 @@ CONTAINS
     character(*), intent(in) :: char_int
     read (char_int, '(I10)') val
   end function return_int
-
-  character function return_char(array_char) result(chr)
-    character(5), intent(in) :: array_char(:)
-    read (array_char, '(A)') chr
-  end function return_char
 
   integer function dice_mc(M) result(roll)
     integer(4), intent(in) :: M

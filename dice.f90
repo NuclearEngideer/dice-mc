@@ -3,8 +3,8 @@ program roll
   implicit none
   
   integer(4), allocatable   :: N, M
-  integer(4)                :: i, ilast, j, start, end_index
-  integer(4)                :: num_elements, total
+  integer(4)                :: i, ilast, j, start, end_index, ii
+  integer(4)                :: num_elements, global_total, inner_total
   character(256)            :: inString
   character(:), allocatable :: splitstring(:)
   logical                   :: default_plus
@@ -22,6 +22,7 @@ program roll
   
   100 continue
   default_plus = .false.
+  global_total=0
   write(*,*)
   write(*,*) 'Input >'
 
@@ -61,30 +62,16 @@ program roll
   ! Begin input parsing...
 
   num_elements = 0
-  do i=1,len_trim(instring)
-    ! If no sign preceeding first NdM, must be appended later and array needs to be +1
-    if ( i == 1 .and. inString(i:i) .ne. '-') then ! .or. &
-!       & i == 1 .and. inString(i:i) .ne. '1' .or. &
-!       & i == 1 .and. inString(i:i) .ne. '2' .or. &
-!       & i == 1 .and. inString(i:i) .ne. '3' .or. &
-!       & i == 1 .and. inString(i:i) .ne. '4' .or. &
-!       & i == 1 .and. inString(i:i) .ne. '5' .or. &
-!       & i == 1 .and. inString(i:i) .ne. '6' .or. &
-!       & i == 1 .and. inString(i:i) .ne. '7' .or. &
-!       & i == 1 .and. inString(i:i) .ne. '8' .or. &
-!       & i == 1 .and. inString(i:i) .ne. '9' .or. &
-!       & i == 1 .and. inString(i:i) .ne. '0' ) then
-       num_elements = num_elements + 1
-       default_plus = .true.
-    end if
-    ! First, read the number of elements in the input string
-    if ( inString(i:i) .eq. ' ') then
-      if ( inString(i+1:i+1) .eq. ' ' ) then
-        cycle
-      end if
-    num_elements = num_elements + 1
-    end if
-  end do
+  num_elements = count([(instring(i:i), i=1,len_trim(instring))] .eq. 'd' .or. &
+                      &[(instring(i:i), i=1,len_trim(instring))] .eq. 'x' .or. & 
+                      &[(instring(i:i), i=1,len_trim(instring))] .eq. '-' .or. & 
+                      &[(instring(i:i), i=1,len_trim(instring))] .eq. '+')
+
+  if ( inString(1:1) .ne. '-' .and. &
+     & inString(1:1) .ne. '+') then
+!     num_elements = num_elements + 1
+     default_plus = .true.
+  end if
  
   ! Handle bad inputs
   if ( num_elements == 0 ) then
@@ -99,63 +86,47 @@ program roll
   end if
 
   ! allocate the array to store the values of the input string
-  allocate( character(5) :: splitstring( num_elements + 1 ) )
-  write(*,*) size(splitstring)
+  allocate( character(5) :: splitstring( num_elements ) )
 
-  ilast = 1
-  j = 1
-  start=1
-  end_index=len_trim(instring) + 1
-  ! prepend the + if the default_plus got toggled true
-  if ( default_plus ) then
-    splitstring(1) = '+'
-    start = 3
-    j=2
-    end_index=end_index + 10
-  endif
-
-  do i=start, end_index
-    ! Parse the user's input string:
-    ! step through the string, appending non-whitespace values to appropriate arrays
-    if ( inString(i:i) .eq. ' ' ) then
-      write(*,*) 'j=',j
-      splitstring(j) = inString(ilast:i-1)
-      ilast=i+1
-      j=j+1
-    end if 
-  enddo
-
-  do i=1, len(splitstring)
-    write(*,*) splitstring(i)
-  enddo
+  read(instring,*) splitstring
   ! end initial input parsing
 
+  ! Set loop if needed
+  j=1
+  end_index = size(splitstring)
+  if ( splitstring(end_index)(1:1) .eq. 'x' ) then
+    j = return_int( splitstring(size(splitstring))(2:)) 
+    end_index=size(splitstring)-1
+  end if
 
-  ! Begin initial loop by reading the last value but only if last element starts with x
-!  if ( splitstring( size( splitstring ) )(1:1) .eq. 'x' ) then
-!    total=0
-!    do i=1, return_int(trim(splitstring(size(splitstring))(2:)))
-!      write(*,*) 'Roll set ', i
-!      ! loop over everything else in the input array thing
-!      do i=1, splitstring( size( splitstring ) - 1 )
-!        ! Check if the first item in the input array is an arithmetic operator
-!        ! If so, pass the appropriate sign to the next item function
-!
-!        ! TODO the logic should check that there's a sign or not in front of the first d term
-!        ! if so, we can step through with slices of 2. If not, we need to default a + sign
-!        ! then read the first term, then read 2nd/3rd, then 4th/5th, etc
-!        ! if we further break the splitstring down from "1d20 + 1d4 - 1d8f x4"
-!        ! to "+ 1 d 2 0 + 1 d 4 - 1 d 8 x 4", it would be pretty easy to parse thru triplets
-!        ! rework input parsing maybe? we can strip whitespace somehow
-!        ! maybe keep the input parse as it is, but add logic to pre-allocation to check if the first non-white space char
-!        ! is an operator or a number, then if it's not a negative sign, default the assignment after allocating array to +,
-!        ! then can feed "triplets" to the roller (still have to split around the d)
-!        if (i==1 .and. len_trim(splitstring(1)) == 1 ) then
-!          total = total + parse_next(
-!          
-!      total = total + parse_next(  
-!    enddo
-!  endif
+  do i=1,j
+    inner_total=0
+    do ii=1,end_index
+      ! if the index is an operator, take note of the operator
+      ! then read the next index and cycle 
+      if ( ii==1 .and. default_plus ) then
+        ! add to total (default plus)
+        inner_total=inner_total+parse_next(splitstring(ii:ii))
+        cycle
+      else if ( return_char(splitstring(ii:ii)) .eq. '+' ) then
+        ! add splitstring(ii+1) to total
+        inner_total=inner_total+parse_next(splitstring(ii+1:ii+1))
+        cycle
+      else if ( return_char(splitstring(ii:ii)) .eq. '-' ) then
+        ! subtract splitstring(ii+1) from total
+        inner_total=inner_total-parse_next(splitstring(ii+1:ii+1))
+        cycle
+      else
+        ! cycle if on a digit, not an operator
+        cycle
+      endif
+!      write(*,*) 'Total for roll', i, 'is', inner_total
+!      global_total=global_total+inner_total
+    enddo 
+  enddo
+
+  ! Write final rolls
+  write(*,*) 'Total of all',j,'rolls is', global_total
 
   ! Cleanup before next loop
   deallocate(splitstring)
@@ -168,6 +139,10 @@ CONTAINS
     read (char_int, '(I10)') val
   end function return_int
 
+  character function return_char(array_char) result(chr)
+    character(5), intent(in) :: array_char(:)
+    read (array_char, '(A)') chr
+  end function return_char
 
   integer function dice_mc(M) result(roll)
     integer(4), intent(in) :: M
@@ -176,9 +151,26 @@ CONTAINS
     roll = ceiling(M*rand)
   end function dice_mc
     
-!  integer function parse_next(item,sign) result(item_val)
-!    character(5), intent(in) :: item
-    
+  integer function parse_next(item) result(total)
+    character(5), intent(in) :: item(:)
+    integer(4)               :: M, N, i
+    character(5)             :: ichr
+    integer(4), allocatable  :: trial(:)
+
+    read(item, '(A)') ichr
+
+    ! Number of dice
+    N=return_int(ichr(1:index(ichr, 'd')-1))
+    ! Value of dice
+    M=return_int(ichr(index(ichr, 'd')+1:))
+    allocate(trial(N))
+    do i=1,N
+      trial(i) = dice_MC(M)
+    end do
+    total = sum(trial)
+    write(*,*) ichr, trial, 'total=',total
+    deallocate(trial)
+  end function parse_next 
 
 end program
 

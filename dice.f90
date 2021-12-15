@@ -101,31 +101,31 @@ program roll
 
   do i=1,j
     inner_total=0
-    do ii=1,end_index
+     do ii=1,end_index
+      
       ! if the index is an operator, take note of the operator
       ! then read the next index and cycle 
       if ( ii==1 .and. default_plus ) then
         ! add to total (default plus)
-        inner_total=inner_total+parse_next(splitstring(ii:ii))
-        cycle
-      else if ( return_char(splitstring(ii:ii)) .eq. '+' ) then
+        inner_total=inner_total+parse_next(splitstring(ii))
+      else if ( splitstring(ii) .eq. '+' ) then
         ! add splitstring(ii+1) to total
-        inner_total=inner_total+parse_next(splitstring(ii+1:ii+1))
-        cycle
-      else if ( return_char(splitstring(ii:ii)) .eq. '-' ) then
-        ! subtract splitstring(ii+1) from total
-        inner_total=inner_total-parse_next(splitstring(ii+1:ii+1))
-        cycle
-      else
-        ! cycle if on a digit, not an operator
-        cycle
+        inner_total=inner_total+parse_next(splitstring(ii+1))
+      else if ( splitstring(ii) .eq. '-' ) then
+        ! add splitstring(ii+1) to total
+        inner_total=inner_total-parse_next(splitstring(ii+1))
       endif
-!      write(*,*) 'Total for roll', i, 'is', inner_total
-!      global_total=global_total+inner_total
-    enddo 
+    enddo
+    if ( j > 1 ) then
+      write(*,*) '----------------------------------------'
+      write(*,*) 'Total for roll', i, 'is', inner_total
+      write(*,*) '----------------------------------------'
+    endif
+    global_total=global_total+inner_total
   enddo
 
   ! Write final rolls
+  write(*,*)
   write(*,*) 'Total of all',j,'rolls is', global_total
 
   ! Cleanup before next loop
@@ -152,23 +152,20 @@ CONTAINS
   end function dice_mc
     
   integer function parse_next(item) result(total)
-    character(5), intent(in) :: item(:)
+    character(5), intent(in) :: item
     integer(4)               :: M, N, i
-    character(5)             :: ichr
     integer(4), allocatable  :: trial(:)
 
-    read(item, '(A)') ichr
-
     ! Number of dice
-    N=return_int(ichr(1:index(ichr, 'd')-1))
+    N=return_int(item(1:index(item, 'd')-1))
     ! Value of dice
-    M=return_int(ichr(index(ichr, 'd')+1:))
+    M=return_int(item(index(item, 'd')+1:))
     allocate(trial(N))
     do i=1,N
       trial(i) = dice_MC(M)
     end do
     total = sum(trial)
-    write(*,*) ichr, trial, 'total=',total
+    write(*,*) item, trial, 'total=',total
     deallocate(trial)
   end function parse_next 
 

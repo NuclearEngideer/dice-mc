@@ -3,11 +3,11 @@ program roll
   implicit none
   
   integer(4), allocatable   :: N, M
-  integer(4)                :: i, ilast, j
+  integer(4)                :: i, ilast, j, start, end_index
   integer(4)                :: num_elements, total
   character(256)            :: inString
   character(:), allocatable :: splitstring(:)
-  logical                   :: default_plus = .false.
+  logical                   :: default_plus
   
   write(*,*) '    _/_/_/    _/_/_/   _/_/_/  _/_/_/            _/      _/   _/_/_/'
   write(*,*) '   _/    _/    _/   _/        _/                _/_/  _/_/   _/'
@@ -21,6 +21,7 @@ program roll
   write(*,*) 'Quit with "q"'
   
   100 continue
+  default_plus = .false.
   write(*,*)
   write(*,*) 'Input >'
 
@@ -60,20 +61,19 @@ program roll
   ! Begin input parsing...
 
   num_elements = 0
-
   do i=1,len_trim(instring)
     ! If no sign preceeding first NdM, must be appended later and array needs to be +1
-    if ( i == 1 .and. inString(i:i) .ne. '-' .or. &
-       & i == 1 .and. inString(i:i) .ne. '1' .or. &
-       & i == 1 .and. inString(i:i) .ne. '2' .or. &
-       & i == 1 .and. inString(i:i) .ne. '3' .or. &
-       & i == 1 .and. inString(i:i) .ne. '4' .or. &
-       & i == 1 .and. inString(i:i) .ne. '5' .or. &
-       & i == 1 .and. inString(i:i) .ne. '6' .or. &
-       & i == 1 .and. inString(i:i) .ne. '7' .or. &
-       & i == 1 .and. inString(i:i) .ne. '8' .or. &
-       & i == 1 .and. inString(i:i) .ne. '9' .or. &
-       & i == 1 .and. inString(i:i) .ne. '0' ) then
+    if ( i == 1 .and. inString(i:i) .ne. '-') then ! .or. &
+!       & i == 1 .and. inString(i:i) .ne. '1' .or. &
+!       & i == 1 .and. inString(i:i) .ne. '2' .or. &
+!       & i == 1 .and. inString(i:i) .ne. '3' .or. &
+!       & i == 1 .and. inString(i:i) .ne. '4' .or. &
+!       & i == 1 .and. inString(i:i) .ne. '5' .or. &
+!       & i == 1 .and. inString(i:i) .ne. '6' .or. &
+!       & i == 1 .and. inString(i:i) .ne. '7' .or. &
+!       & i == 1 .and. inString(i:i) .ne. '8' .or. &
+!       & i == 1 .and. inString(i:i) .ne. '9' .or. &
+!       & i == 1 .and. inString(i:i) .ne. '0' ) then
        num_elements = num_elements + 1
        default_plus = .true.
     end if
@@ -100,47 +100,62 @@ program roll
 
   ! allocate the array to store the values of the input string
   allocate( character(5) :: splitstring( num_elements + 1 ) )
+  write(*,*) size(splitstring)
 
   ilast = 1
   j = 1
-  do i=1,len_trim(instring)+1
+  start=1
+  end_index=len_trim(instring) + 1
+  ! prepend the + if the default_plus got toggled true
+  if ( default_plus ) then
+    splitstring(1) = '+'
+    start = 3
+    j=2
+    end_index=end_index + 10
+  endif
+
+  do i=start, end_index
     ! Parse the user's input string:
     ! step through the string, appending non-whitespace values to appropriate arrays
     if ( inString(i:i) .eq. ' ' ) then
+      write(*,*) 'j=',j
       splitstring(j) = inString(ilast:i-1)
       ilast=i+1
       j=j+1
     end if 
   enddo
 
+  do i=1, len(splitstring)
+    write(*,*) splitstring(i)
+  enddo
   ! end initial input parsing
 
 
   ! Begin initial loop by reading the last value but only if last element starts with x
-  if ( splitstring( size( splitstring ) )(1:1) .eq. 'x' ) then
-    total=0
-    do i=1, return_int(trim(splitstring(size(splitstring))(2:)))
-      write(*,*) 'Roll set ', i
-      ! loop over everything else in the input array thing
-      do i=1, splitstring( size( splitstring ) - 1 )
-        ! Check if the first item in the input array is an arithmetic operator
-        ! If so, pass the appropriate sign to the next item function
-
-        ! TODO the logic should check that there's a sign or not in front of the first d term
-        ! if so, we can step through with slices of 2. If not, we need to default a + sign
-        ! then read the first term, then read 2nd/3rd, then 4th/5th, etc
-        ! if we further break the splitstring down from "1d20 + 1d4 - 1d8f x4"
-        ! to "+ 1 d 2 0 + 1 d 4 - 1 d 8 x 4", it would be pretty easy to parse thru triplets
-        ! rework input parsing maybe? we can strip whitespace somehow
-        ! maybe keep the input parse as it is, but add logic to pre-allocation to check if the first non-white space char
-        ! is an operator or a number, then if it's not a negative sign, default the assignment after allocating array to +,
-        ! then can feed "triplets" to the roller (still have to split around the d)
-        if (i==1 .and. len_trim(splitstring(1)) == 1 ) then
-          total = total + parse_next(
-          
-      total = total + parse_next(  
-    enddo
-  endif
+!  if ( splitstring( size( splitstring ) )(1:1) .eq. 'x' ) then
+!    total=0
+!    do i=1, return_int(trim(splitstring(size(splitstring))(2:)))
+!      write(*,*) 'Roll set ', i
+!      ! loop over everything else in the input array thing
+!      do i=1, splitstring( size( splitstring ) - 1 )
+!        ! Check if the first item in the input array is an arithmetic operator
+!        ! If so, pass the appropriate sign to the next item function
+!
+!        ! TODO the logic should check that there's a sign or not in front of the first d term
+!        ! if so, we can step through with slices of 2. If not, we need to default a + sign
+!        ! then read the first term, then read 2nd/3rd, then 4th/5th, etc
+!        ! if we further break the splitstring down from "1d20 + 1d4 - 1d8f x4"
+!        ! to "+ 1 d 2 0 + 1 d 4 - 1 d 8 x 4", it would be pretty easy to parse thru triplets
+!        ! rework input parsing maybe? we can strip whitespace somehow
+!        ! maybe keep the input parse as it is, but add logic to pre-allocation to check if the first non-white space char
+!        ! is an operator or a number, then if it's not a negative sign, default the assignment after allocating array to +,
+!        ! then can feed "triplets" to the roller (still have to split around the d)
+!        if (i==1 .and. len_trim(splitstring(1)) == 1 ) then
+!          total = total + parse_next(
+!          
+!      total = total + parse_next(  
+!    enddo
+!  endif
 
   ! Cleanup before next loop
   deallocate(splitstring)
@@ -161,9 +176,9 @@ CONTAINS
     roll = ceiling(M*rand)
   end function dice_mc
     
-  integer function parse_next(item,sign) result(item_val)
-    character(5), intent(in) :: item
-
+!  integer function parse_next(item,sign) result(item_val)
+!    character(5), intent(in) :: item
+    
 
 end program
 

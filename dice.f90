@@ -9,7 +9,7 @@ program roll
   character(:), allocatable :: splitstring(:)
   logical                   :: default_plus
   
-  write(*,*) '    _/_/_/    _/_/_/   _/_/_/  _/_/_/            _/      _/   _/_/_/'
+  write(*,*) '    _/_/_/    _/_/_/   _/_/_/  _/_/_/            _/      _/     _/_/_/'
   write(*,*) '   _/    _/    _/   _/        _/                _/_/  _/_/   _/'
   write(*,*) '  _/    _/    _/   _/        _/_/_/   _/_/_/   _/  _/  _/   _/'
   write(*,*) ' _/    _/    _/   _/        _/                _/      _/   _/'

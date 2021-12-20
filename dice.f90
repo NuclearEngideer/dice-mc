@@ -7,7 +7,7 @@ program roll
   integer(4)                :: num_elements, global_total, inner_total
   character(256)            :: inString
   character(:), allocatable :: splitstring(:)
-  logical                   :: default_plus, becca
+  logical                   :: default_plus, becca, haryahm
   
   write(*,*) '    _/_/_/    _/_/_/   _/_/_/  _/_/_/            _/      _/     _/_/_/'
   write(*,*) '   _/    _/    _/   _/        _/                _/_/  _/_/   _/'
@@ -22,6 +22,7 @@ program roll
   write(*,*) 'Quit with "q"'
  
   becca=.false.
+  haryahm=.false.
 
   100 continue
   default_plus = .false.
@@ -83,12 +84,20 @@ program roll
      becca = .false.
      call print_error
      goto 100
+  else if ( inString .eq. 'haryahm' ) then
+     haryahm = .true.
+     call print_error
+     goto 100
+  else if ( inString .eq. 'unharyahm' ) then
+    haryahm = .false.
+    call print_error
+    goto 100
   end if
 
   ! Handle bad/null inputs
   if ( num_elements == 0) then
-     call print_error
-     goto 100
+    call print_error
+    goto 100
   end if
 
   ! allocate the array to store the values of the input string
@@ -118,11 +127,18 @@ program roll
         inner_total=inner_total-parse_next(splitstring(ii+1))
       endif
     enddo
-    if ( j > 1 ) then
+    if ( j > 1 .and. .not. haryahm ) then
       write(*,*) '----------------------------------------'
       write(*,*) 'Total for roll', i, 'is', inner_total
       write(*,*) '----------------------------------------'
+    else if ( haryahm ) then
+      write(*,*) '----------------------------------------'
+      write(*,*) 'You hear trumpets and look at your dice. You have rolled: 23'
+      write(*,*) '----------------------------------------'
+      global_total = 23
+      inner_total =0
     endif
+
     global_total=global_total+inner_total
   enddo
 
@@ -172,9 +188,9 @@ CONTAINS
   end function parse_next 
 
   subroutine print_error()
-     write(*,*) '########################'
+     write(*,*) '###############################'
      write(*,*) '# ERROR: Missing or Bad Input #'
-     write(*,*) '########################'
+     write(*,*) '###############################'
      write(*,*) 'Enter in the form of "1d20 + 1d6 + 1d8 x4"'
      write(*,*) 'to roll those dice 4 times'
      write(*,*)

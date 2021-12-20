@@ -145,19 +145,14 @@ CONTAINS
     integer(4), intent(in) :: M
     real(8)                :: rand
     call random_number(rand)
+    if ( becca ) then 
+      do while ( rand < 0.65 )
+        call random_number(rand)
+      end do
+    end if
     roll = ceiling(M*rand)
   end function dice_mc
     
-  integer function dice_mc_mod(M) result(roll)
-    integer(4), intent(in) :: M
-    real(8)                :: rand
-    rand = 0.0
-    do while ( rand < 0.65 )
-      call random_number(rand)
-    enddo
-    roll = ceiling(M*rand)
-  end function dice_mc_mod
-  
   integer function parse_next(item) result(total)
     character(5), intent(in) :: item
     integer(4)               :: M, N, i
@@ -168,15 +163,9 @@ CONTAINS
     ! Value of dice
     M=return_int(item(index(item, 'd')+1:))
     allocate(trial(N))
-    if ( becca ) then
-      do i=1,N
-        trial(i) = dice_MC_mod(M)
-      enddo
-    else
-      do i=1,N
-        trial(i) = dice_MC(M)
-      end do
-    endif
+    do i=1,N
+      trial(i) = dice_MC(M)
+    end do
     total = sum(trial)
     write(*,*) item, trial, 'total=',total
     deallocate(trial)

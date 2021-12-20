@@ -1,6 +1,6 @@
 # dice-mc
 ```
-    _/_/_/    _/_/_/   _/_/_/  _/_/_/            _/      _/   _/_/_/   
+    _/_/_/    _/_/_/   _/_/_/  _/_/_/            _/      _/     _/_/_/   
    _/    _/    _/   _/        _/                _/_/  _/_/   _/        
   _/    _/    _/   _/        _/_/_/   _/_/_/   _/  _/  _/   _/         
  _/    _/    _/   _/        _/                _/      _/   _/          
@@ -43,3 +43,5 @@ Calling this a monte carlo dice roller is probably a stretch, but it does use ra
 Compile with gfortran. 
 Help text available with input of `h`, `H`, or `help`.
 Quit by unplugging your desktop, with `ctrl-c`, or with input of `q` or `Q`
+
+Contains undocumented "secret functionality" in the "secret-functions" branch. Main branch will always roll dice fair with no secret inputs.

@@ -7,7 +7,7 @@ program roll
   integer(4)                :: num_elements, global_total, inner_total
   character(256)            :: inString
   character(:), allocatable :: splitstring(:)
-  logical                   :: default_plus
+  logical                   :: default_plus, becca
   
   write(*,*) '    _/_/_/    _/_/_/   _/_/_/  _/_/_/            _/      _/   _/_/_/'
   write(*,*) '   _/    _/    _/   _/        _/                _/_/  _/_/   _/'
@@ -20,7 +20,9 @@ program roll
   write(*,*)
   write(*,*) 'Help with "h"'
   write(*,*) 'Quit with "q"'
-  
+ 
+  becca=.false.
+
   100 continue
   default_plus = .false.
   global_total=0
@@ -73,15 +75,19 @@ program roll
      default_plus = .true.
   end if
  
-  ! Handle bad inputs
-  if ( num_elements == 0 ) then
-     write(*,*) '########################'
-     write(*,*) '# ERROR: Missing Input #'
-     write(*,*) '########################'
-     write(*,*) 'Enter in the form of "1d20 + 1d6 + 1d8 x4"'
-     write(*,*) 'to roll those dice 4 times'
-     write(*,*)
-     write(*,*) 'Quit with "q"'
+  if ( inString .eq. 'becca' ) then
+     becca = .true.
+     call print_error
+     goto 100
+  else if ( inString .eq. 'unbecca' ) then
+     becca = .false.
+     call print_error
+     goto 100
+  end if
+
+  ! Handle bad/null inputs
+  if ( num_elements == 0) then
+     call print_error
      goto 100
   end if
 
@@ -142,6 +148,16 @@ CONTAINS
     roll = ceiling(M*rand)
   end function dice_mc
     
+  integer function dice_mc_mod(M) result(roll)
+    integer(4), intent(in) :: M
+    real(8)                :: rand
+    rand = 0.0
+    do while ( rand < 0.65 )
+      call random_number(rand)
+    enddo
+    roll = ceiling(M*rand)
+  end function dice_mc_mod
+  
   integer function parse_next(item) result(total)
     character(5), intent(in) :: item
     integer(4)               :: M, N, i
@@ -152,13 +168,28 @@ CONTAINS
     ! Value of dice
     M=return_int(item(index(item, 'd')+1:))
     allocate(trial(N))
-    do i=1,N
-      trial(i) = dice_MC(M)
-    end do
+    if ( becca ) then
+      do i=1,N
+        trial(i) = dice_MC_mod(M)
+      enddo
+    else
+      do i=1,N
+        trial(i) = dice_MC(M)
+      end do
+    endif
     total = sum(trial)
     write(*,*) item, trial, 'total=',total
     deallocate(trial)
   end function parse_next 
 
+  subroutine print_error()
+     write(*,*) '########################'
+     write(*,*) '# ERROR: Missing or Bad Input #'
+     write(*,*) '########################'
+     write(*,*) 'Enter in the form of "1d20 + 1d6 + 1d8 x4"'
+     write(*,*) 'to roll those dice 4 times'
+     write(*,*)
+     write(*,*) 'Quit with "q"'
+  end subroutine print_error
 end program
 
